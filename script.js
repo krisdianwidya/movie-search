@@ -2,15 +2,35 @@ const btnSearch = document.querySelector('.btn-search');
 
 btnSearch.addEventListener('click', async function () {
     const searchKeyword = document.querySelector('.movie-keyword');
-    const movies = await getMovies(searchKeyword.value);
-    updateUI(movies);
+    try {
+        const movies = await getMovies(searchKeyword.value);
+        updateUI(movies);
+    } catch (error) {
+        const alertArea = document.querySelector('.alert-area');
+        alertArea.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>${error}</strong>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+        <span aria-hidden="true">&times;</span>
+        </button>
+        </div>`
+    }
     searchKeyword.value = '';
 });
 
 function getMovies(keyword) {
     return fetch(`http://www.omdbapi.com/?apikey=9c8fa799&s=${keyword}`)
-        .then(response => response.json())
-        .then(response => response.Search);
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(response.statusText);
+            }
+            return response.json();
+        })
+        .then(response => {
+            if (response.Response === "False") {
+                throw new Error(response.Error);
+            }
+            return response.Search;
+        });
 }
 
 function updateUI(movies) {
